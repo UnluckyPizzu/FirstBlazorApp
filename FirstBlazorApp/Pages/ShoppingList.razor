@@ -3,15 +3,33 @@
 <PageTitle>@title</PageTitle>
 <h3>ShoppingList</h3>
 
-<input placeholder="Grocery Name" @bind="groceryName" />
-<input placeholder="Grocery Price" @bind="groceryPrice" />
-<button @onclick="AddGrocery">Add Grocery</button>
-<ul class="mt-3">
+<EditForm Model="@grocery" OnSubmit="AddGrocery">
+    <DataAnnotationsValidator></DataAnnotationsValidator>
+    <ValidationSummary/>
+    <p>
+        <label>
+            Name:<InputText @bind-Value="grocery.Name"></InputText>
+        </label>
+    </p>
+    <p>
+        <label>
+            Price:<InputNumber @bind-Value="grocery.Price"></InputNumber>
+        </label>
+    </p>
+    <button type="submit">Add Grocery</button>
+</EditForm>
+
+<table class="table table-sm">
+    <tr>
+        <th>Name</th>
+        <th>Price</th>
+        <th></th>
+    </tr>
     @foreach(var grocery in groceries)
     {
-        <li>@grocery.Name -- @grocery.Price</li>
+        <Item GroceryItem="@grocery" OnGroceryPriceIncreased="OnGroceryIncreased"></Item>
     }
-</ul>
+</table>
 <h1>Total Price = @sum</h1>
 
 @code {
@@ -20,19 +38,25 @@
     private string title = "Our Groceries";
     private float sum = 0;
     private List<Grocery> groceries = new();
+    private Grocery grocery = new();
 
     private void AddGrocery()
     {
-        Grocery newGrocery = new();
-        if(!string.IsNullOrEmpty(groceryName) && groceryPrice > 0)
-        {
-            newGrocery.Name = groceryName;
-            newGrocery.Price = groceryPrice;
-            groceries.Add(newGrocery);
-        }
+        groceries.Add(grocery);
+        grocery = new();
 
-        groceryName = string.Empty;
-        groceryPrice = 0;
-        sum += newGrocery.Price;
+        UpdateTotalAmount();
+    }
+
+
+    public void UpdateTotalAmount() 
+    {
+        sum = groceries.Sum(grocery => grocery.Price);    
+    }
+
+    private void OnGroceryIncreased()
+    {
+        UpdateTotalAmount();
     }
 }
+
