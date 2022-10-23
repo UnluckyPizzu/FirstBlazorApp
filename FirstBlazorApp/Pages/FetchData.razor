@@ -7,29 +7,41 @@
 
 <p>This component demonstrates fetching data from the server.</p>
 
+<h4>Enter city:</h4>
+<input type="text" @bind="@City"/>
+<button @onclick="GetWeatherForecast" >Search</button>
+
 @if (forecasts == null)
 {
     <p><em>Loading...</em></p>
 }
 else
 {
+    var today = DateTime.Today;
+    <h4> @today.ToShortDateString() </h4>
+    <p>Region @forecasts.region</p>
+    <p>DayHour @forecasts.currentConditions.dayhour</p>
+    <p>Temp (C) @forecasts.currentConditions.temp.c</p>
+    <p>Summary @forecasts.currentConditions.comment</p>
+    <p>Humidity @forecasts.currentConditions.humidity</p>
+
     <table class="table">
         <thead>
             <tr>
                 <th>Date</th>
-                <th>Temp. (C)</th>
-                <th>Temp. (F)</th>
-                <th>Summary</th>
+                <th>Min Temp. (C)</th>
+                <th>Max Temp. (C)</th>
+                <th>Comment</th>
             </tr>
         </thead>
         <tbody>
-            @foreach (var forecast in forecasts)
+            @foreach (var forecast in forecasts.next_days)
             {
                 <tr>
-                    <td>@forecast.Date.ToShortDateString()</td>
-                    <td>@forecast.TemperatureC</td>
-                    <td>@forecast.TemperatureF</td>
-                    <td>@forecast.Summary</td>
+                    <td>@forecast.day</td>
+                    <td>@forecast.min_temp.c</td>
+                    <td>@forecast.max_temp.c</td>
+                    <td>@forecast.comment</td>
                 </tr>
             }
         </tbody>
@@ -37,21 +49,77 @@ else
 }
 
 @code {
-    private WeatherForecast[]? forecasts;
+    private Root? forecasts;
+    private string City = "Rome";
 
     protected override async Task OnInitializedAsync()
     {
-        forecasts = await Http.GetFromJsonAsync<WeatherForecast[]>("sample-data/weather.json");
+        forecasts = await Http.GetFromJsonAsync<Root>("Rome");
     }
-
-    public class WeatherForecast
+    
+    private async Task GetWeatherForecast()
     {
-        public DateTime Date { get; set; }
-
-        public int TemperatureC { get; set; }
-
-        public string? Summary { get; set; }
-
-        public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+        forecasts = await Http.GetFromJsonAsync<Root>(City);
     }
+
+    public class ContactAuthor
+    {
+        public string email { get; set; }
+        public string auth_note { get; set; }
+    }
+
+    public class CurrentConditions
+    {
+        public string dayhour { get; set; }
+        public Temp temp { get; set; }
+        public string precip { get; set; }
+        public string humidity { get; set; }
+        public Wind wind { get; set; }
+        public string iconURL { get; set; }
+        public string comment { get; set; }
+    }
+
+    public class MaxTemp
+    {
+        public int c { get; set; }
+        public int f { get; set; }
+    }
+
+    public class MinTemp
+    {
+        public int c { get; set; }
+        public int f { get; set; }
+    }
+
+    public class NextDay
+    {
+        public string day { get; set; }
+        public string comment { get; set; }
+        public MaxTemp max_temp { get; set; }
+        public MinTemp min_temp { get; set; }
+        public string iconURL { get; set; }
+    }
+
+    public class Root
+    {
+        public string region { get; set; }
+        public CurrentConditions currentConditions { get; set; }
+        public List<NextDay> next_days { get; set; }
+        public ContactAuthor contact_author { get; set; }
+        public string data_source { get; set; }
+    }
+
+    public class Temp
+    {
+        public int c { get; set; }
+        public int f { get; set; }
+    }
+
+    public class Wind
+    {
+        public int km { get; set; }
+        public int mile { get; set; }
+    }
+
+
 }
